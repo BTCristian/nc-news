@@ -1,10 +1,7 @@
 const express = require("express");
-const {} = require("./controllers/articles.controller");
-const {} = require("./controllers/comments.controller");
 const { getAllTopics } = require("./controllers/topics.controller");
-const {} = require("./controllers/users.controllers");
 const endpoints = require("./endpoints.json");
-const { end } = require("./db/connection");
+const { getArticleById } = require("./controllers/articles.controller");
 
 const app = express();
 
@@ -14,10 +11,35 @@ app.get("/api", (req, res) => {
 
 app.get("/api/topics", getAllTopics);
 
+app.get("/api/articles/:article_id", getArticleById);
+
+app.use((err, req, res, next) => {
+  if (err.code === "22P02") {
+    res.status(400).send({ msg: "Bad request, invalid id/not a number" });
+  } else {
+    next(err);
+  }
+});
+
+app.use((err, req, res, next) => {
+  if (err.msg === "Id not found") {
+    res.status(404).send({ msg: "Id not found" });
+  } else {
+    next(err);
+  }
+});
+
 app.use((err, req, res, next) => {
   if (err.status && err.msg) {
     res.status(err.status).send({ msg: err.msg });
+  } else {
+    next(err);
   }
+});
+
+app.use((err, req, res, next) => {
+  console.log(err);
+  res.status(500).send({ msg: "Internal Server Error" });
 });
 
 module.exports = app;
