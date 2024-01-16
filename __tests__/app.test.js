@@ -3,6 +3,7 @@ const app = require("../app");
 const request = require("supertest");
 const seed = require("../db/seeds/seed");
 const testData = require("../db/data/test-data/");
+const articles = require("../db/data/test-data/articles");
 
 beforeEach(() => {
   return seed(testData);
@@ -86,6 +87,31 @@ describe("/api/articles/:article_id", () => {
       .expect(400)
       .then((response) => {
         expect(response.body.msg).toBe("Bad request, invalid id/not a number");
+      });
+  });
+});
+
+describe("/api/articles", () => {
+  test.skip("GET 200: should return an articles array of article objects with their properties", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then((response) => {
+        console.log(response.body);
+        expect(response.body).toBeInstanceOf(Array);
+        response.body.forEach((articles) => {
+          expect(articles).toHaveProperty("author");
+          expect(articles).toHaveProperty("topic");
+          expect(articles).toHaveProperty("article_img_url");
+          expect(articles).toHaveProperty("comment_count");
+
+          expect(typeof articles.votes).toBe("number");
+        });
+
+        expect(response.body[0].title).toBe(
+          "Living in the shadow of a great man"
+        );
+        expect(response.body[0].article_id).toBe(1);
       });
   });
 });
