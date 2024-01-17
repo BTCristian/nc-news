@@ -4,6 +4,7 @@ const request = require("supertest");
 const seed = require("../db/seeds/seed");
 const testData = require("../db/data/test-data/");
 const articles = require("../db/data/test-data/articles");
+const sorted = require("jest-sorted");
 
 beforeEach(() => {
   return seed(testData);
@@ -72,7 +73,7 @@ describe("/api/articles/:article_id", () => {
       });
   });
 
-  test("GET 404: should return status code 404 and 'Id not found' when id is not found", () => {
+  test("GET 404: should return status code 404 and 'Id not found' when article_id is not found", () => {
     return request(app)
       .get("/api/articles/9999")
       .expect(404)
@@ -86,7 +87,9 @@ describe("/api/articles/:article_id", () => {
       .get("/api/articles/nonsense")
       .expect(400)
       .then((response) => {
-        expect(response.body.msg).toBe("Bad request, invalid id/not a number");
+        expect(response.body.msg).toBe(
+          "Bad request, invalid article_id/not a number"
+        );
       });
   });
 });
@@ -119,6 +122,59 @@ describe("/api/articles", () => {
       .expect(404)
       .then((response) => {
         expect(response.body.msg).toBe("Endpoint Invalid/Not Found");
+      });
+  });
+});
+
+describe("/api/articles/:article_id/comments", () => {
+  test("GET 200: should return an an array of comments for the given article_id", () => {
+    return request(app)
+      .get("/api/articles/1/comments")
+      .expect(200)
+      .then((response) => {
+        console.log(response.body);
+        expect(response.body).toBeInstanceOf(Array);
+        expect(response.body).toBeSortedBy("created_at", {
+          descending: true,
+        });
+        response.body.forEach((comment) => {
+          expect(comment).toHaveProperty("comment_id");
+          expect(comment).toHaveProperty("votes");
+          expect(comment).toHaveProperty("created_at");
+          expect(comment).toHaveProperty("author");
+          expect(comment).toHaveProperty("body");
+          expect(comment).toHaveProperty("article_id");
+        });
+      });
+  });
+
+  test("GET 200: should return an empty array for an article with 0 comments", () => {
+    return request(app)
+      .get("/api/articles/7/comments")
+      .expect(200)
+      .then((response) => {
+        expect(response.body).toBeInstanceOf(Array);
+        expect(response.body).toHaveLength(0);
+      });
+  });
+
+  test("GET 404: should return status code 404 and 'Id not found' when article_id is not found", () => {
+    return request(app)
+      .get("/api/articles/999/comments")
+      .expect(404)
+      .then((response) => {
+        expect(response.body.msg).toBe("Article ID not found");
+      });
+  });
+
+  test("GET 400: should return status code 400, bad request for an invalid article_id ", () => {
+    return request(app)
+      .get("/api/articles/nonsense/comments")
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe(
+          "Bad request, invalid article_id/not a number"
+        );
       });
   });
 });
