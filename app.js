@@ -39,4 +39,8 @@ app.use((err, req, res, next) => {
   res.status(500).send({ msg: "Internal Server Error" });
 });
 
+app.all("*", (req, res) => {
+  res.status(404).send({ msg: "Endpoint Invalid/Not Found" });
+});
+
 module.exports = app;
