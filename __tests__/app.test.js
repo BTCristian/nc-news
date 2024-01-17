@@ -3,6 +3,7 @@ const app = require("../app");
 const request = require("supertest");
 const seed = require("../db/seeds/seed");
 const testData = require("../db/data/test-data/");
+const articles = require("../db/data/test-data/articles");
 
 beforeEach(() => {
   return seed(testData);
@@ -86,6 +87,38 @@ describe("/api/articles/:article_id", () => {
       .expect(400)
       .then((response) => {
         expect(response.body.msg).toBe("Bad request, invalid id/not a number");
+      });
+  });
+});
+
+describe("/api/articles", () => {
+  test("GET 200: should return an articles array of article objects with their properties", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then((response) => {
+        expect(response.body).toBeInstanceOf(Array);
+        response.body.forEach((article) => {
+          expect(article).toHaveProperty("author");
+          expect(article).toHaveProperty("topic");
+          expect(article).toHaveProperty("article_img_url");
+          expect(article).toHaveProperty("comment_count");
+          expect(article).not.toHaveProperty("body");
+          expect(typeof article.votes).toBe("number");
+        });
+        expect(response.body[0].title).toBe(
+          "Eight pug gifs that remind me of mitch"
+        );
+        expect(response.body[0].article_id).toBe(3);
+      });
+  });
+
+  test("GET 404: should return status code 404, for invalid endpoint ", () => {
+    return request(app)
+      .get("/api/aticles")
+      .expect(404)
+      .then((response) => {
+        expect(response.body.msg).toBe("Endpoint Invalid/Not Found");
       });
   });
 });
