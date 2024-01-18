@@ -110,9 +110,8 @@
 
   "DELETE /api/comments/:comment_id": {
     "description": "will remove a comment by its comment_id, responds with no content",
-    "queries": ["comment_id", "comments"],
-    } 
+    "queries": ["comment_id", "comments"]
   }
-
+}
 
 
