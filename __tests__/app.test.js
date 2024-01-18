@@ -127,54 +127,116 @@ describe("/api/articles", () => {
 });
 
 describe("/api/articles/:article_id/comments", () => {
-  test("GET 200: should return an an array of comments for the given article_id", () => {
-    return request(app)
-      .get("/api/articles/1/comments")
-      .expect(200)
-      .then((response) => {
-        console.log(response.body);
-        expect(response.body).toBeInstanceOf(Array);
-        expect(response.body).toBeSortedBy("created_at", {
-          descending: true,
+  describe("GET", () => {
+    test("GET 200: should return an an array of comments for the given article_id", () => {
+      return request(app)
+        .get("/api/articles/1/comments")
+        .expect(200)
+        .then((response) => {
+          expect(response.body.comments).toBeInstanceOf(Array);
+          expect(response.body.comments).toBeSortedBy("created_at", {
+            descending: true,
+          });
+          response.body.comments.forEach((comment) => {
+            expect(comment).toHaveProperty("comment_id");
+            expect(comment).toHaveProperty("votes");
+            expect(comment).toHaveProperty("created_at");
+            expect(comment).toHaveProperty("author");
+            expect(comment).toHaveProperty("body");
+            expect(comment).toHaveProperty("article_id");
+          });
         });
-        response.body.forEach((comment) => {
-          expect(comment).toHaveProperty("comment_id");
-          expect(comment).toHaveProperty("votes");
-          expect(comment).toHaveProperty("created_at");
-          expect(comment).toHaveProperty("author");
-          expect(comment).toHaveProperty("body");
-          expect(comment).toHaveProperty("article_id");
+    });
+
+    test("GET 200: should return an empty array for an article with 0 comments", () => {
+      return request(app)
+        .get("/api/articles/7/comments")
+        .expect(200)
+        .then((response) => {
+          expect(response.body.comments).toBeInstanceOf(Array);
+          expect(response.body.comments).toHaveLength(0);
+          expect(response.body.comments).toEqual([]);
         });
-      });
+    });
+
+    test("GET 404: should return status code 404 and 'Id not found' when article_id is not found", () => {
+      return request(app)
+        .get("/api/articles/999/comments")
+        .expect(404)
+        .then((response) => {
+          expect(response.body.msg).toBe("Article ID not found");
+        });
+    });
+
+    test("GET 400: should return status code 400, bad request for an invalid article_id ", () => {
+      return request(app)
+        .get("/api/articles/nonsense/comments")
+        .expect(400)
+        .then((response) => {
+          expect(response.body.msg).toBe(
+            "Bad request, invalid article_id/not a number"
+          );
+        });
+    });
   });
 
-  test("GET 200: should return an empty array for an article with 0 comments", () => {
-    return request(app)
-      .get("/api/articles/7/comments")
-      .expect(200)
-      .then((response) => {
-        expect(response.body).toBeInstanceOf(Array);
-        expect(response.body).toHaveLength(0);
-      });
-  });
+  describe("POST", () => {
+    test("POST 201: should add a new comment to the article and responds with the posted comment", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({ username: "butter_bridge", body: "Testing POST comment" })
+        .expect(201)
+        .then((response) => {
+          expect(response.body.comment.body).toBe("Testing POST comment");
+          expect(response.body.comment.author).toBe("butter_bridge");
+          expect(response.body.comment).toHaveProperty("author");
+          expect(response.body.comment).toHaveProperty("comment_id");
+          expect(response.body.comment).toHaveProperty("created_at");
+        });
+    });
 
-  test("GET 404: should return status code 404 and 'Id not found' when article_id is not found", () => {
-    return request(app)
-      .get("/api/articles/999/comments")
-      .expect(404)
-      .then((response) => {
-        expect(response.body.msg).toBe("Article ID not found");
-      });
-  });
+    test("POST 400: should return status code 400, for request with no username || body", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({ username: "butter_bridge" })
+        .expect(400)
+        .then((response) => {
+          expect(response.body.msg).toBe(
+            "Username or body are required fields"
+          );
+        });
+    });
 
-  test("GET 400: should return status code 400, bad request for an invalid article_id ", () => {
-    return request(app)
-      .get("/api/articles/nonsense/comments")
-      .expect(400)
-      .then((response) => {
-        expect(response.body.msg).toBe(
-          "Bad request, invalid article_id/not a number"
-        );
-      });
+    test("POST 400: should return status code 400, for non-existent user POST request", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({ username: "test_user", body: "Testing POST comment" })
+        .expect(400)
+        .then((response) => {
+          expect(response.body.msg).toBe("User not found");
+        });
+    });
+
+    test("POST 400: should return status code 400, for invalid article_id", () => {
+      return request(app)
+        .post("/api/articles/nonsense/comments")
+        .send({ username: "butter_bridge", body: "Testing POST comment" })
+        .expect(400)
+        .then((response) => {
+          expect(response.body.msg).toBe(
+            "Bad request, invalid article_id/not a number"
+          );
+        });
+    });
+
+    test("POST 404: should return status code 404, for not found article_id", () => {
+      return request(app)
+        .post("/api/articles/999/comments")
+        .send({ username: "butter_bridge", body: "Testing POST comment" })
+        .expect(404)
+        .then((response) => {
+          expect(response.body.msg).toBe("Article not found");
+        });
+    });
   });
 });
