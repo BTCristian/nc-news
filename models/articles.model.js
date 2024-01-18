@@ -16,7 +16,7 @@ exports.fetchArticleById = (article_id) => {
       }
       return Promise.reject({
         status: 404,
-        msg: "Id not found",
+        msg: "Article ID not found",
       });
     });
 };
@@ -82,6 +82,13 @@ exports.fetchCommentsByArticleId = (article_id) => {
     });
 };
 
+//to be refactored considering insert query error
+// (both article_id and author are foreign keys REFERENCING other tables.
+//   So you don't need to do any manual checking that they exist,
+//   you can use the one POST query and if they don't exist PSQL
+//   will throw an error automatically.)
+// from here:
+// vvv
 const checkIfUserExists = (author) => {
   return db
     .query(
@@ -138,4 +145,23 @@ exports.insertComment = ({ article_id, author, body }) => {
         return rows[0];
       });
   });
+};
+
+//to here ^^^
+
+exports.updateArticleVotes = (article_id, inc_votes) => {
+  return db.query(
+    `
+      UPDATE articles
+      SET votes = votes + $1
+      WHERE article_id = $2
+      RETURNING *
+      `,
+    [inc_votes, article_id]
+  );
+  // .then(({ rows }) => {
+  //   if (rows.length === 0) {
+  //     return Promise.reject({ status: 400, msg: "Article ID not found" });
+  //   }
+  // });
 };

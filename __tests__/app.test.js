@@ -57,40 +57,78 @@ describe("/api/nonsense", () => {
 });
 
 describe("/api/articles/:article_id", () => {
-  test("GET 200: should return an article object by given id with its own key properties", () => {
-    return request(app)
-      .get("/api/articles/1")
-      .expect(200)
-      .then((response) => {
-        expect(response.body.article_id).toBe(1);
-        expect(response.body.author).toBe("butter_bridge");
-        expect(response.body.title).toBe("Living in the shadow of a great man");
-        expect(response.body.votes).toBe(100);
-        expect(typeof response.body.body).toBe("string");
-        expect(typeof response.body.topic).toBe("string");
-        expect(typeof response.body.created_at).toBe("string");
-        expect(typeof response.body.article_img_url).toBe("string");
-      });
+  describe("GET", () => {
+    test("GET 200: should return an article object by given id with its own key properties", () => {
+      return request(app)
+        .get("/api/articles/1")
+        .expect(200)
+        .then((response) => {
+          expect(response.body.article_id).toBe(1);
+          expect(response.body.author).toBe("butter_bridge");
+          expect(response.body.title).toBe(
+            "Living in the shadow of a great man"
+          );
+          expect(response.body.votes).toBe(100);
+          expect(typeof response.body.body).toBe("string");
+          expect(typeof response.body.topic).toBe("string");
+          expect(typeof response.body.created_at).toBe("string");
+          expect(typeof response.body.article_img_url).toBe("string");
+        });
+    });
+
+    test("GET 404: should return status code 404 and 'Article ID not found' when article_id is not found", () => {
+      return request(app)
+        .get("/api/articles/9999")
+        .expect(404)
+        .then((response) => {
+          expect(response.body.msg).toBe("Article ID not found");
+        });
+    });
+
+    test("GET 400: should return status code 400, bad request for an invalid id ", () => {
+      return request(app)
+        .get("/api/articles/nonsense")
+        .expect(400)
+        .then((response) => {
+          expect(response.body.msg).toBe(
+            "Bad request, invalid article_id/not a number"
+          );
+        });
+    });
   });
 
-  test("GET 404: should return status code 404 and 'Id not found' when article_id is not found", () => {
-    return request(app)
-      .get("/api/articles/9999")
-      .expect(404)
-      .then((response) => {
-        expect(response.body.msg).toBe("Id not found");
-      });
-  });
+  describe("PATCH", () => {
+    test("PATCH 200: should update the votes property of the article", () => {
+      return request(app)
+        .patch("/api/articles/1")
+        .send({ inc_votes: 10 })
+        .expect(200)
+        .then((response) => {
+          expect(response.body.article.votes).toBe(110);
+        });
+    });
 
-  test("GET 400: should return status code 400, bad request for an invalid id ", () => {
-    return request(app)
-      .get("/api/articles/nonsense")
-      .expect(400)
-      .then((response) => {
-        expect(response.body.msg).toBe(
-          "Bad request, invalid article_id/not a number"
-        );
-      });
+    test("PATCH 400: should return status code 400 for invalid inc_votes", () => {
+      return request(app)
+        .patch("/api/articles/1")
+        .send({ inc_votes: "nonsense" })
+        .expect(400)
+        .then((response) => {
+          expect(response.body.msg).toBe(
+            "Bad request, inc_votes must be a number"
+          );
+        });
+    });
+
+    test("PATCH 404: should return status code 404 when article_id is not found", () => {
+      return request(app)
+        .patch("/api/articles/999")
+        .send({ inc_votes: 10 })
+        .expect(404)
+        .then((response) => {
+          expect(response.body.msg).toBe("Article ID not found");
+        });
+    });
   });
 });
 
@@ -101,6 +139,7 @@ describe("/api/articles", () => {
       .expect(200)
       .then((response) => {
         expect(response.body).toBeInstanceOf(Array);
+        expect(response.body.length).toBeGreaterThan(0);
         response.body.forEach((article) => {
           expect(article).toHaveProperty("author");
           expect(article).toHaveProperty("topic");
@@ -159,7 +198,7 @@ describe("/api/articles/:article_id/comments", () => {
         });
     });
 
-    test("GET 404: should return status code 404 and 'Id not found' when article_id is not found", () => {
+    test("GET 404: should return status code 404 and 'Article ID not found' when article_id is not found", () => {
       return request(app)
         .get("/api/articles/999/comments")
         .expect(404)
@@ -189,7 +228,6 @@ describe("/api/articles/:article_id/comments", () => {
         .then((response) => {
           expect(response.body.comment.body).toBe("Testing POST comment");
           expect(response.body.comment.author).toBe("butter_bridge");
-          expect(response.body.comment).toHaveProperty("author");
           expect(response.body.comment).toHaveProperty("comment_id");
           expect(response.body.comment).toHaveProperty("created_at");
         });
@@ -207,6 +245,8 @@ describe("/api/articles/:article_id/comments", () => {
         });
     });
 
+    // Because this is a not found type error, the status code should be 404
+    // vvv(to be refactored)
     test("POST 400: should return status code 400, for non-existent user POST request", () => {
       return request(app)
         .post("/api/articles/1/comments")
@@ -229,7 +269,7 @@ describe("/api/articles/:article_id/comments", () => {
         });
     });
 
-    test("POST 404: should return status code 404, for not found article_id", () => {
+    test("POST 404: should return status code 404 when article_id is not found", () => {
       return request(app)
         .post("/api/articles/999/comments")
         .send({ username: "butter_bridge", body: "Testing POST comment" })
