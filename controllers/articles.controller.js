@@ -45,7 +45,7 @@ exports.postCommentByArticleId = (req, res, next) => {
       .status(400)
       .send({ msg: "Username or body are required fields" });
   }
-  // let these undefined values go into the query, in which case
+  // let these ^^^ undefined values go into the query, in which case
   // PSQL would throw an error which can be handled.
   // this approach also works^^
 
