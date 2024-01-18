@@ -51,7 +51,7 @@ describe("/api/nonsense", () => {
       .get("/api/nonsense")
       .expect(404)
       .then((response) => {
-        expect(response.res.statusMessage).toBe("Not Found");
+        expect(response.body.msg).toBe("Endpoint Invalid/Not Found");
       });
   });
 });
@@ -309,4 +309,30 @@ describe("/api/comments/:comment_id", () => {
   });
 });
 
-// describe("/api/users");
+describe("/api/users", () => {
+  describe("GET", () => {
+    test("GET 200: should return an array of user objects", () => {
+      return request(app)
+        .get("/api/users")
+        .expect(200)
+        .then((response) => {
+          expect(response.body.users).toBeInstanceOf(Array);
+          expect(response.body.users.length).toBeGreaterThan(0);
+          response.body.users.forEach((user) => {
+            expect(user).toHaveProperty("username");
+            expect(user).toHaveProperty("name");
+            expect(user).toHaveProperty("avatar_url");
+          });
+        });
+    });
+
+    test("GET 404: should return status code 404 for invalid path for endpoint", () => {
+      return request(app)
+        .get("/api/nonsense")
+        .expect(404)
+        .then((response) => {
+          expect(response.body.msg).toBe("Endpoint Invalid/Not Found");
+        });
+    });
+  });
+});
