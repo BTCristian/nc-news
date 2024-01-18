@@ -7,6 +7,7 @@ const {
   getCommentsByArticleId,
   postCommentByArticleId,
   patchArticleById,
+  deleteCommentById,
 } = require("./controllers/articles.controller");
 
 const app = express();
@@ -28,11 +29,11 @@ app.get("/api/articles/:article_id/comments", getCommentsByArticleId);
 
 app.post("/api/articles/:article_id/comments", postCommentByArticleId);
 
+app.delete("/api/comments/:comment_id", deleteCommentById);
+
 app.use((err, req, res, next) => {
   if (err.code === "22P02") {
-    res
-      .status(400)
-      .send({ msg: "Bad request, invalid article_id/not a number" });
+    res.status(400).send({ msg: "Bad request, invalid id/not a number" });
   } else {
     next(err);
   }
