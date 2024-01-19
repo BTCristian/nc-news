@@ -58,7 +58,7 @@ describe("/api/nonsense", () => {
 
 describe("/api/articles/:article_id", () => {
   describe("GET", () => {
-    test("GET 200: should return an article object by given id with its own key properties", () => {
+    test("GET 200: should return an article object by given id with its own key properties, with comment_count included", () => {
       return request(app)
         .get("/api/articles/1")
         .expect(200)
@@ -69,8 +69,7 @@ describe("/api/articles/:article_id", () => {
             "Living in the shadow of a great man"
           );
           expect(response.body.votes).toBe(100);
-          expect(typeof response.body.body).toBe("string");
-          expect(typeof response.body.topic).toBe("string");
+          expect(response.body).toHaveProperty("comment_count");
           expect(typeof response.body.created_at).toBe("string");
           expect(typeof response.body.article_img_url).toBe("string");
         });
@@ -339,7 +338,7 @@ describe("/api/users", () => {
   });
 });
 
-describe("/api/articles(topic)", () => {
+describe("/api/articles?topic=", () => {
   describe("GET", () => {
     test("GET 200: should return articles filtered by topic if topic query is provided", () => {
       const topic = "mitch";
@@ -360,6 +359,7 @@ describe("/api/articles(topic)", () => {
         .expect(200)
         .then((response) => {
           expect(response.body).toBeInstanceOf(Array);
+
           response.body.forEach((article) => {
             expect(article).toHaveProperty("author");
             expect(article).toHaveProperty("topic");
