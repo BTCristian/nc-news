@@ -358,7 +358,6 @@ describe("/api/articles?topic=", () => {
         .get(`/api/articles?topic=${topic}`)
         .expect(200)
         .then((response) => {
-          console.log(response.body);
           expect(response.body.length).toBe(0);
           expect(response.body).toEqual([]);
         });
