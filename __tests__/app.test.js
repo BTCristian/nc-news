@@ -326,7 +326,6 @@ describe("/api/users", () => {
         .get("/api/users")
         .expect(200)
         .then((response) => {
-          expect(response.body.users).toBeInstanceOf(Array);
           expect(response.body.users.length).toBeGreaterThan(0);
           response.body.users.forEach((user) => {
             expect(user).toHaveProperty("username");
@@ -346,10 +345,22 @@ describe("/api/articles?topic=", () => {
         .get(`/api/articles?topic=${topic}`)
         .expect(200)
         .then((response) => {
-          expect(response.body).toBeInstanceOf(Array);
+          expect(response.body.length).toBeGreaterThan(0);
           response.body.forEach((article) => {
             expect(article.topic).toBe(topic);
           });
+        });
+    });
+
+    test("GET 200: should return an empty array if topic exists but there is no article associated", () => {
+      const topic = "paper";
+      return request(app)
+        .get(`/api/articles?topic=${topic}`)
+        .expect(200)
+        .then((response) => {
+          console.log(response.body);
+          expect(response.body.length).toBe(0);
+          expect(response.body).toEqual([]);
         });
     });
 
@@ -358,8 +369,7 @@ describe("/api/articles?topic=", () => {
         .get("/api/articles")
         .expect(200)
         .then((response) => {
-          expect(response.body).toBeInstanceOf(Array);
-
+          expect(response.body.length).toBeGreaterThan(0);
           response.body.forEach((article) => {
             expect(article).toHaveProperty("author");
             expect(article).toHaveProperty("topic");

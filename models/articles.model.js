@@ -61,10 +61,23 @@ exports.fetchAllArticles = (topic) => {
     `;
   return db.query(queryString, topic ? [topic] : []).then((results) => {
     if (results.rows.length === 0) {
-      return Promise.reject({
-        status: 404,
-        msg: `No articles found with topic: ${topic}`,
-      });
+      return db
+        .query(
+          `
+        SELECT * FROM topics
+        WHERE topics.slug = $1
+        `,
+          [topic]
+        )
+        .then(({ rows }) => {
+          if (rows.length === 0) {
+            return Promise.reject({
+              status: 404,
+              msg: `No articles found with topic: ${topic}`,
+            });
+          }
+          return [];
+        });
     }
     return results.rows;
   });
