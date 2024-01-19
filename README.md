@@ -6,7 +6,7 @@ This is an API for the purpose of accessing application data programmatically. T
 # Hosted Version
 
 Explore the hosted version of NC News here:
-https://nc-news-cristian.onrender.com/
+https://nc-news-cristian.onrender.com/api
 
 \*You may find it easier to read by installing a JSON Formatter extension to your browser. We recommend this one for Chrome: https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa?hl=en
 
