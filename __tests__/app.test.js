@@ -129,6 +129,17 @@ describe("/api/articles/:article_id", () => {
           expect(response.body.msg).toBe("Article ID not found");
         });
     });
+
+    test("PATCH 400: should return status code 400, bad request for an invalid article_id ", () => {
+      return request(app)
+        .get("/api/articles/nonsense")
+        .expect(400)
+        .then((response) => {
+          expect(response.body.msg).toBe(
+            "Bad request, invalid id/not a number"
+          );
+        });
+    });
   });
 });
 
@@ -325,13 +336,49 @@ describe("/api/users", () => {
           });
         });
     });
+  });
+});
 
-    test("GET 404: should return status code 404 for invalid path for endpoint", () => {
+describe("/api/articles(topic)", () => {
+  describe("GET", () => {
+    test("GET 200: should return articles filtered by topic if topic query is provided", () => {
+      const topic = "mitch";
       return request(app)
-        .get("/api/nonsense")
+        .get(`/api/articles?topic=${topic}`)
+        .expect(200)
+        .then((response) => {
+          expect(response.body).toBeInstanceOf(Array);
+          response.body.forEach((article) => {
+            expect(article.topic).toBe(topic);
+          });
+        });
+    });
+
+    test("GET 200: should return all articles if no topic query is provided", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then((response) => {
+          expect(response.body).toBeInstanceOf(Array);
+          response.body.forEach((article) => {
+            expect(article).toHaveProperty("author");
+            expect(article).toHaveProperty("topic");
+            expect(article).toHaveProperty("article_img_url");
+            expect(article).toHaveProperty("comment_count");
+            expect(article).not.toHaveProperty("body");
+            expect(typeof article.votes).toBe("number");
+          });
+        });
+    });
+
+    test("GET 404: should return status code 404 for a valid but not found topic", () => {
+      return request(app)
+        .get("/api/articles?topic=nonsense")
         .expect(404)
         .then((response) => {
-          expect(response.body.msg).toBe("Endpoint Invalid/Not Found");
+          expect(response.body.msg).toBe(
+            `No articles found with topic: nonsense`
+          );
         });
     });
   });
