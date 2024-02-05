@@ -6,7 +6,7 @@ This is an API for the purpose of accessing application data programmatically. T
 # Hosted Version
 
 Explore the hosted version of NC News here:
-https://nc-news-cristian.onrender.com/
+https://nc-news-cristian.onrender.com/api
 
 \*You may find it easier to read by installing a JSON Formatter extension to your browser. We recommend this one for Chrome: https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa?hl=en
 
@@ -14,9 +14,9 @@ Your database will be PSQL, and you will interact with it using node-postgres. P
 
 # Get started
 
-             by cloning (not forking) this GitHub repo:
+Get started by cloning (not forking) this GitHub repo:
 
-https://github.com/BTCristian/nc-news
+        https://github.com/BTCristian/nc-news
 
 # Database instructions
 
@@ -60,5 +60,5 @@ Run the tests to ensure everything is set up correctly:
 
 Ensure you have the following minimum versions of Node.js and PostgreSQL:
 
-Node.js: v14.0.0
-PostgreSQL: v12.0.0
+    Node.js: v14.0.0
+    PostgreSQL: v12.0.0
