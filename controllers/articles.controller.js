@@ -1,96 +1,78 @@
 const {
-  fetchArticleById,
-  fetchAllArticles,
-  fetchCommentsByArticleId,
-  insertComment,
-  updateArticleVotes,
-  deleteCommentById,
+  selectArticleById,
+  selectArticles,
+  updateArticleById,
+  addArticle,
+  removeArticleById,
 } = require("../models/articles.model");
+const { checkTopicExists } = require("./utils/checkTopicExists");
 
 exports.getArticleById = (req, res, next) => {
   const { article_id } = req.params;
-  fetchArticleById(article_id)
+
+  selectArticleById(article_id)
     .then((article) => {
-      res.status(200).send(article);
+      res.status(200).send({ article });
     })
-    .catch((err) => {
-      next(err);
-    });
+    .catch(next);
 };
 
-exports.getAllArticles = (req, res, next) => {
-  const { topic } = req.query;
-  fetchAllArticles(topic)
-    .then((articles) => {
-      res.status(200).send(articles);
-    })
-    .catch((err) => {
-      next(err);
-    });
-};
+exports.getArticles = (req, res, next) => {
+  const { topic, sort_by, order } = req.query;
+  let { limit, page } = req.query;
+  const queries = [selectArticles(topic, sort_by, order)];
 
-exports.getCommentsByArticleId = (req, res, next) => {
-  const { article_id } = req.params;
-
-  fetchCommentsByArticleId(article_id)
-    .then((comments) => {
-      res.status(200).send({ comments });
-    })
-    .catch((err) => {
-      next(err);
-    });
-};
-
-exports.postCommentByArticleId = (req, res, next) => {
-  const { article_id } = req.params;
-  const { username, body } = req.body;
-
-  if (!username || !body) {
-    return res
-      .status(400)
-      .send({ msg: "Username or body are required fields" });
+  if (topic) {
+    const topicExists = checkTopicExists(topic);
+    queries.push(topicExists);
   }
-  // let these ^^^ undefined values go into the query, in which case
-  // PSQL would throw an error which can be handled.
-  // this approach also works^^
+  if (limit === undefined) {
+    limit = 10;
+  }
 
-  return insertComment({ article_id, author: username, body })
-    .then((comment) => {
-      res.status(201).send({ comment });
+  if (page === undefined) {
+    page = 1;
+  }
+
+  Promise.all(queries)
+    .then((response) => {
+      const start = (page - 1) * limit;
+      const end = page * limit;
+
+      const total_count = response[0].length;
+      const articles = response[0].slice(start, end);
+      res.status(200).send({ total_count, articles });
     })
-    .catch((err) => {
-      next(err);
-    });
+    .catch(next);
 };
 
 exports.patchArticleById = (req, res, next) => {
   const { article_id } = req.params;
-  const { inc_votes } = req.body;
+  const body = req.body;
 
-  if (typeof inc_votes !== "number") {
-    return res
-      .status(400)
-      .send({ msg: "Bad request, inc_votes must be a number" });
-  }
-
-  updateArticleVotes(article_id, inc_votes)
-    .then(() => fetchArticleById(article_id))
-    .then((updatedArticle) => {
-      res.status(200).send({ article: updatedArticle });
+  updateArticleById(article_id, body)
+    .then((article) => {
+      res.status(200).send({ article });
     })
-    .catch((err) => {
-      next(err);
-    });
+    .catch(next);
 };
 
-exports.deleteCommentById = (req, res, next) => {
-  const { comment_id } = req.params;
+exports.postArticles = (req, res, next) => {
+  const newArticle = req.body;
 
-  deleteCommentById(comment_id)
-    .then(() => {
-      res.status(204).send();
+  addArticle(newArticle)
+    .then((article) => {
+      res.status(201).send({ article });
     })
-    .catch((err) => {
-      next(err);
-    });
+    .catch(next);
+};
+
+exports.deleteArticleById = (req, res, next) => {
+  const { article_id } = req.params;
+
+  removeArticleById(article_id)
+    .then(() => {
+      res.sendStatus(204);
+    })
+    .catch(next);
 };
